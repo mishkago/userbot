@@ -7,12 +7,12 @@ from telethon import events, TelegramClient
 # Константы
 CONFIG_FILE = "config.json"
 DEFAULT_TYPING_SPEED = 0.3
-GITHUB_RAW_URL = "https://raw.githubusercontent.com/mishkago/userbot/refs/heads/main/main.py"  
+GITHUB_RAW_URL = "https://raw.githubusercontent.com/mishkago/userbot/refs/heads/main/main.py"  # Укажите название вашего скрипта
 SCRIPT_VERSION = "1.3"
 
 # Проверяем наличие файла конфигурации
 if os.path.exists(CONFIG_FILE):
-    with open(CONFIG_FILE, 'r') as f:
+    with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
         config = json.load(f)
     API_ID = config.get("API_ID")
     API_HASH = config.get("API_HASH")
@@ -26,7 +26,7 @@ else:
     typing_speed = DEFAULT_TYPING_SPEED
 
     # Сохраняем данные в файл конфигурации
-    with open(CONFIG_FILE, 'w') as f:
+    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
         json.dump({
             "API_ID": API_ID,
             "API_HASH": API_HASH,
@@ -43,7 +43,7 @@ def check_for_updates():
         response = requests.get(GITHUB_RAW_URL)
         if response.status_code == 200:
             remote_script = response.text
-            with open(__file__, 'r') as f:
+            with open(__file__, 'r', encoding='utf-8') as f:
                 current_script = f.read()
             
             if "SCRIPT_VERSION" in remote_script and "SCRIPT_VERSION" in current_script:
@@ -116,10 +116,10 @@ async def set_typing_speed(event):
         if 0.1 <= new_speed <= 0.5:
             typing_speed = new_speed
 
-            with open(CONFIG_FILE, 'r') as f:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                 config = json.load(f)
             config["typing_speed"] = typing_speed
-            with open(CONFIG_FILE, 'w') as f:
+            with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
                 json.dump(config, f)
 
             await event.reply(f"<b>Скорость печатания изменена на {typing_speed} секунд.</b>", parse_mode='html')
