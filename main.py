@@ -7,35 +7,44 @@ from telethon import events, TelegramClient
 # Константы
 CONFIG_FILE = "config.json"
 DEFAULT_TYPING_SPEED = 0.3
-GITHUB_RAW_URL = "https://raw.githubusercontent.com/mishkago/userbot/refs/heads/main/main.py"  # Укажите название вашего скрипта
-SCRIPT_VERSION = "1.3"
+GITHUB_RAW_URL = "https://raw.githubusercontent.com/mishkago/userbot/main/main.py"  # Укажите название вашего скрипта
+SCRIPT_VERSION = "1.4"
 
 # Проверяем наличие файла конфигурации
 if os.path.exists(CONFIG_FILE):
-    with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-        config = json.load(f)
-    API_ID = config.get("API_ID")
-    API_HASH = config.get("API_HASH")
-    PHONE_NUMBER = config.get("PHONE_NUMBER")
-    typing_speed = config.get("typing_speed", DEFAULT_TYPING_SPEED)
+    try:
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        API_ID = config.get("API_ID")
+        API_HASH = config.get("API_HASH")
+        PHONE_NUMBER = config.get("PHONE_NUMBER")
+        typing_speed = config.get("typing_speed", DEFAULT_TYPING_SPEED)
+    except (json.JSONDecodeError, KeyError) as e:
+        print(f"Ошибка чтения конфигурации: {e}. Удалите {CONFIG_FILE} и попробуйте снова.")
+        exit(1)
 else:
     # Запрашиваем данные у пользователя
-    API_ID = int(input("Введите ваш API ID: "))
-    API_HASH = input("Введите ваш API Hash: ")
-    PHONE_NUMBER = input("Введите ваш номер телефона (в формате +375XXXXXXXXX, +7XXXXXXXXXX): ")
-    typing_speed = DEFAULT_TYPING_SPEED
+    try:
+        API_ID = int(input("Введите ваш API ID: "))
+        API_HASH = input("Введите ваш API Hash: ").strip()
+        PHONE_NUMBER = input("Введите ваш номер телефона (в формате +375XXXXXXXXX, +7XXXXXXXXXX): ").strip()
+        typing_speed = DEFAULT_TYPING_SPEED
 
-    # Сохраняем данные в файл конфигурации
-    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-        json.dump({
-            "API_ID": API_ID,
-            "API_HASH": API_HASH,
-            "PHONE_NUMBER": PHONE_NUMBER,
-            "typing_speed": typing_speed
-        }, f)
+        # Сохраняем данные в файл конфигурации
+        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump({
+                "API_ID": API_ID,
+                "API_HASH": API_HASH,
+                "PHONE_NUMBER": PHONE_NUMBER,
+                "typing_speed": typing_speed
+            }, f)
+    except Exception as e:
+        print(f"Ошибка сохранения конфигурации: {e}")
+        exit(1)
 
 # Инициализация клиента
-client = TelegramClient('sessions', API_ID, API_HASH, system_version='4.16.30-vxCUSTOM')
+client = TelegramClient('sessions', API_ID, API_HASH)
+
 
 def check_for_updates():
     """Проверка наличия обновлений скрипта на GitHub."""
@@ -43,16 +52,17 @@ def check_for_updates():
         response = requests.get(GITHUB_RAW_URL)
         if response.status_code == 200:
             remote_script = response.text
-            with open(__file__, 'r', encoding='utf-8') as f:
+            current_file = os.path.abspath(__file__)
+            with open(current_file, 'r', encoding='utf-8') as f:
                 current_script = f.read()
-            
+
             if "SCRIPT_VERSION" in remote_script and "SCRIPT_VERSION" in current_script:
                 remote_version = remote_script.split('SCRIPT_VERSION = "')[1].split('"')[0]
                 if SCRIPT_VERSION != remote_version:
                     print(f"Доступна новая версия скрипта: {remote_version} (текущая: {SCRIPT_VERSION})")
                     choice = input("Хотите обновиться? (y/n): ").strip().lower()
                     if choice == 'y':
-                        with open(__file__, 'w', encoding='utf-8') as f:
+                        with open(current_file, 'w', encoding='utf-8') as f:
                             f.write(remote_script)
                         print("Скрипт обновлен. Перезапустите программу.")
                         exit()
@@ -65,18 +75,6 @@ def check_for_updates():
     except Exception as e:
         print(f"Ошибка при проверке обновлений: {e}")
 
-def update_from_console():
-    """Обновление скрипта из консоли."""
-    try:
-        response = requests.get(GITHUB_RAW_URL)
-        if response.status_code == 200:
-            with open(__file__, 'w', encoding='utf-8') as f:
-                f.write(response.text)
-            print("Скрипт успешно обновлен. Перезапустите программу.")
-        else:
-            print("Не удалось получить обновление. Проверьте URL и соединение с GitHub.")
-    except Exception as e:
-        print(f"Ошибка при обновлении скрипта: {e}")
 
 @client.on(events.NewMessage(pattern=r'/p (.+)'))
 async def animated_typing(event):
@@ -87,7 +85,6 @@ async def animated_typing(event):
             return
 
         text = event.pattern_match.group(1)
-
         typing_cursor = "\u2588"
         typed_text = ""
 
@@ -97,9 +94,8 @@ async def animated_typing(event):
             await asyncio.sleep(typing_speed)
 
         await event.edit(typed_text)
-
     except Exception as e:
-        print(f"Ошибка при выполнении анимации печатания: {e}")
+        print(f"Ошибка анимации: {e}")
         await event.reply("<b>Произошла ошибка во время выполнения команды.</b>", parse_mode='html')
 
 
@@ -129,7 +125,7 @@ async def set_typing_speed(event):
     except ValueError:
         await event.reply("<b>Некорректное значение. Укажите число в формате 0.1 - 0.5.</b>", parse_mode='html')
     except Exception as e:
-        print(f"Ошибка при изменении задержки: {e}")
+        print(f"Ошибка при изменении скорости: {e}")
         await event.reply("<b>Произошла ошибка при изменении скорости.</b>", parse_mode='html')
 
 
@@ -143,7 +139,8 @@ async def update_script(event):
         response = requests.get(GITHUB_RAW_URL)
 
         if response.status_code == 200:
-            with open(__file__, 'w', encoding='utf-8') as f:
+            current_file = os.path.abspath(__file__)
+            with open(current_file, 'w', encoding='utf-8') as f:
                 f.write(response.text)
 
             await event.reply("<b>Скрипт успешно обновлен. Перезапустите программу.</b>", parse_mode='html')
@@ -151,7 +148,7 @@ async def update_script(event):
             await event.reply("<b>Не удалось получить обновление. Проверьте URL и соединение с GitHub.</b>", parse_mode='html')
 
     except Exception as e:
-        print(f"Ошибка при обновлении скрипта: {e}")
+        print(f"Ошибка при обновлении: {e}")
         await event.reply("<b>Произошла ошибка при обновлении скрипта.</b>", parse_mode='html')
 
 
@@ -159,7 +156,7 @@ async def main():
     print(f"Запуск main()\nВерсия скрипта: {SCRIPT_VERSION}")
     check_for_updates()
     await client.start(phone=PHONE_NUMBER)
-    print("Скрипт успешно запущен! Автор @mshkago. Для использования:")
+    print("Скрипт успешно запущен! Для использования:")
     print("- Напишите в чате /p (текст) для анимации печатания.")
     print("- Используйте /s (задержка) для изменения скорости печатания.")
     print("- Используйте /update для обновления скрипта с GitHub.")
