@@ -1,14 +1,15 @@
 import asyncio
 import json
 import os
+import sys
 import requests
 from telethon import events, TelegramClient
 
 # Константы
 CONFIG_FILE = "config.json"
 DEFAULT_TYPING_SPEED = 0.3
-GITHUB_RAW_URL = "https://raw.githubusercontent.com/mishkago/userbot/main/main.py"  # Укажите название вашего скрипта
-SCRIPT_VERSION = "1.4"
+GITHUB_RAW_URL = "https://raw.githubusercontent.com/mishkago/userbot/main/main.py"  # Укажите URL вашего скрипта
+SCRIPT_VERSION = "1.4.1"
 
 # Проверяем наличие файла конфигурации
 if os.path.exists(CONFIG_FILE):
@@ -131,7 +132,7 @@ async def set_typing_speed(event):
 
 @client.on(events.NewMessage(pattern=r'/update'))
 async def update_script(event):
-    """Команда для обновления скрипта с GitHub."""
+    """Команда для обновления скрипта с GitHub и его автоматического перезапуска."""
     try:
         if not event.out:
             return
@@ -143,7 +144,10 @@ async def update_script(event):
             with open(current_file, 'w', encoding='utf-8') as f:
                 f.write(response.text)
 
-            await event.reply("<b>Скрипт успешно обновлен. Перезапустите программу.</b>", parse_mode='html')
+            await event.reply("<b>Скрипт успешно обновлен. Перезапуск...</b>", parse_mode='html')
+
+            # Перезапуск скрипта
+            os.execv(sys.executable, [sys.executable, current_file])
         else:
             await event.reply("<b>Не удалось получить обновление. Проверьте URL и соединение с GitHub.</b>", parse_mode='html')
 
