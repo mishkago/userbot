@@ -8,7 +8,7 @@ from telethon import events, TelegramClient
 CONFIG_FILE = "config.json"
 DEFAULT_TYPING_SPEED = 0.3
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/mishkago/userbot/refs/heads/main/main.py"  # Укажите название вашего скрипта
-SCRIPT_VERSION = "1.4"
+SCRIPT_VERSION = "1.3"
 
 # Проверяем наличие файла конфигурации
 if os.path.exists(CONFIG_FILE):
@@ -100,7 +100,7 @@ async def animated_typing(event):
 
     except Exception as e:
         print(f"Ошибка при выполнении анимации печатания: {e}")
-       
+        await event.reply("<b>Произошла ошибка во время выполнения команды.</b>", parse_mode='html')
 
 
 @client.on(events.NewMessage(pattern=r'/s (\d*\.?\d+)'))
@@ -146,7 +146,7 @@ async def update_script(event):
             with open(__file__, 'w', encoding='utf-8') as f:
                 f.write(response.text)
 
-            await event.reply("<b>Скрипт успешно обновлен. Перезапустите программу с помощью комбинации CNTRL + C.</b>", parse_mode='html')
+            await event.reply("<b>Скрипт успешно обновлен. Перезапустите программу.</b>", parse_mode='html')
         else:
             await event.reply("<b>Не удалось получить обновление. Проверьте URL и соединение с GitHub.</b>", parse_mode='html')
 
