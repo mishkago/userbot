@@ -43,8 +43,11 @@ else:
         print(f"Ошибка сохранения конфигурации: {e}")
         exit(1)
 
+# Уникальное имя файла для сессии
+SESSION_FILE = f'session_{PHONE_NUMBER.replace("+", "").replace("-", "")}'
+
 # Инициализация клиента
-client = TelegramClient('sessions', API_ID, API_HASH)
+client = TelegramClient(SESSION_FILE, API_ID, API_HASH)
 
 
 def check_for_updates():
