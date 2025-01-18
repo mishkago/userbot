@@ -10,7 +10,7 @@ CONFIG_FILE = "config.json"
 DEFAULT_TYPING_SPEED = 0.3
 DEFAULT_TYPING_CURSOR = "\u2588"  # Стандартный символ для анимации печатания
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/mishkago/userbot/main/main.py"  # Укажите URL вашего скрипта
-SCRIPT_VERSION = "1.4.12"
+SCRIPT_VERSION = "1.4.21"
 
 # Проверка наличия файла конфигурации
 if os.path.exists(CONFIG_FILE):
