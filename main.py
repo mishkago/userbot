@@ -8,8 +8,9 @@ from telethon import events, TelegramClient
 # Константы
 CONFIG_FILE = "config.json"
 DEFAULT_TYPING_SPEED = 0.3
+DEFAULT_CURSOR = "\u2588"  # Символ по умолчанию для анимации
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/mishkago/userbot/main/main.py"  # Укажите URL вашего скрипта
-SCRIPT_VERSION = "1.4.22"
+SCRIPT_VERSION = "1.4.24"
 
 # Проверяем наличие файла конфигурации
 if os.path.exists(CONFIG_FILE):
@@ -20,6 +21,7 @@ if os.path.exists(CONFIG_FILE):
         API_HASH = config.get("API_HASH")
         PHONE_NUMBER = config.get("PHONE_NUMBER")
         typing_speed = config.get("typing_speed", DEFAULT_TYPING_SPEED)
+        cursor_symbol = config.get("cursor_symbol", DEFAULT_CURSOR)
     except (json.JSONDecodeError, KeyError) as e:
         print(f"Ошибка чтения конфигурации: {e}. Удалите {CONFIG_FILE} и попробуйте снова.")
         exit(1)
@@ -30,6 +32,7 @@ else:
         API_HASH = input("Введите ваш API Hash: ").strip()
         PHONE_NUMBER = input("Введите ваш номер телефона (в формате +375XXXXXXXXX, +7XXXXXXXXXX): ").strip()
         typing_speed = DEFAULT_TYPING_SPEED
+        cursor_symbol = DEFAULT_CURSOR
 
         # Сохраняем данные в файл конфигурации
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
@@ -37,7 +40,8 @@ else:
                 "API_ID": API_ID,
                 "API_HASH": API_HASH,
                 "PHONE_NUMBER": PHONE_NUMBER,
-                "typing_speed": typing_speed
+                "typing_speed": typing_speed,
+                "cursor_symbol": cursor_symbol
             }, f)
     except Exception as e:
         print(f"Ошибка сохранения конфигурации: {e}")
@@ -83,18 +87,17 @@ def check_for_updates():
 @client.on(events.NewMessage(pattern=r'/p (.+)'))
 async def animated_typing(event):
     """Команда для печатания текста с анимацией."""
-    global typing_speed
+    global typing_speed, cursor_symbol
     try:
         if not event.out:
             return
 
         text = event.pattern_match.group(1)
-        typing_cursor = "\u2588"
         typed_text = ""
 
         for char in text:
             typed_text += char
-            await event.edit(typed_text + typing_cursor)
+            await event.edit(typed_text + cursor_symbol)
             await asyncio.sleep(typing_speed)
 
         await event.edit(typed_text)
@@ -133,6 +136,52 @@ async def set_typing_speed(event):
         await event.reply("<b>Произошла ошибка при изменении скорости.</b>", parse_mode='html')
 
 
+@client.on(events.NewMessage(pattern=r'/c (.+)'))
+async def change_cursor(event):
+    """Команда для изменения символа курсора анимации."""
+    global cursor_symbol
+    try:
+        if not event.out:
+            return
+
+        new_cursor = event.pattern_match.group(1).strip()
+
+        if new_cursor:
+            cursor_symbol = new_cursor
+
+            # Обновление конфигурации
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            config["cursor_symbol"] = cursor_symbol
+            with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                json.dump(config, f)
+
+            await event.reply(f"<b>Символ курсора изменен на: {cursor_symbol}</b>", parse_mode='html')
+        else:
+            await event.reply("<b>Введите корректный символ для курсора.</b>", parse_mode='html')
+    except Exception as e:
+        print(f"Ошибка при изменении символа: {e}")
+        await event.reply("<b>Произошла ошибка при изменении символа курсора.</b>", parse_mode='html')
+
+
+@client.on(events.NewMessage(pattern=r'/support'))
+async def support_author(event):
+    """Команда для поддержки автора (номер карты)."""
+    try:
+        if not event.out:
+            return
+
+        support_message = """
+        Если вам понравился бот и вы хотите поддержать автора, вот номер карты:
+        Номер карты: 9112 3800 5275 9059
+        Благодарю за вашу поддержку!
+        """
+        await event.reply(support_message, parse_mode='html')
+    except Exception as e:
+        print(f"Ошибка при отправке информации для поддержки: {e}")
+        await event.reply("<b>Произошла ошибка при отправке информации.</b>", parse_mode='html')
+
+
 @client.on(events.NewMessage(pattern=r'/update'))
 async def update_script(event):
     """Команда для обновления скрипта с GitHub и его автоматического перезапуска."""
@@ -166,7 +215,9 @@ async def main():
     print("Скрипт успешно запущен! Для использования:")
     print("- Напишите в чате /p (текст) для анимации печатания.")
     print("- Используйте /s (задержка) для изменения скорости печатания.")
+    print("- Используйте /c (символ) для изменения символа курсора анимации.")
     print("- Используйте /update для обновления скрипта с GitHub.")
+    print("- Используйте /support для поддержки автора.")
     await client.run_until_disconnected()
 
 
