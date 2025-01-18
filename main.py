@@ -10,7 +10,7 @@ CONFIG_FILE = "config.json"
 DEFAULT_TYPING_SPEED = 0.3
 DEFAULT_CURSOR = "\u2588"  # Символ по умолчанию для анимации
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/mishkago/userbot/main/main.py"  # Укажите URL вашего скрипта
-SCRIPT_VERSION = "1.4.24"
+SCRIPT_VERSION = "1.4.25"
 
 # Проверяем наличие файла конфигурации
 if os.path.exists(CONFIG_FILE):
@@ -163,6 +163,31 @@ async def change_cursor(event):
         print(f"Ошибка при изменении символа: {e}")
         await event.reply("<b>Произошла ошибка при изменении символа курсора.</b>", parse_mode='html')
 
+@client.on(events.NewMessage(pattern=r'/sp (.+) (\d+) (\d*\.?\d+)'))
+async def spam_message(event):
+    """Команда для спама сообщений."""
+    try:
+        if not event.out:
+            return
+
+        message = event.pattern_match.group(1)
+        count = int(event.pattern_match.group(2))
+        speed = float(event.pattern_match.group(3))
+
+        if count <= 0 or speed <= 0:
+            await event.reply("<b>Количество сообщений и скорость должны быть положительными числами.</b>", parse_mode='html')
+            return
+
+        for _ in range(count):
+            await event.reply(message)
+            await asyncio.sleep(speed)
+
+        
+    except Exception as e:
+        print(f"Ошибка при спаме: {e}")
+        await event.reply("<b>Произошла ошибка при отправке сообщений.</b>", parse_mode='html')
+
+
 
 @client.on(events.NewMessage(pattern=r'/support'))
 async def support_author(event):
@@ -216,6 +241,7 @@ async def main():
     print("- Напишите в чате /p (текст) для анимации печатания.")
     print("- Используйте /s (задержка) для изменения скорости печатания.")
     print("- Используйте /c (символ) для изменения символа курсора анимации.")
+    print("= Использкйт /sp (текст) (количество) (скорость отправки).")
     print("- Используйте /update для обновления скрипта с GitHub.")
     print("- Используйте /support для поддержки автора.")
     await client.run_until_disconnected()
