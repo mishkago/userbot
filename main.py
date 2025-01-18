@@ -1,4 +1,5 @@
 import asyncio
+import re
 from telethon import events, TelegramClient
 
 # Запрашиваем у пользователя значения переменных
@@ -23,12 +24,18 @@ while True:
 @client.on(events.NewMessage(pattern=r'/p (.+)'))
 async def animated_typing(event):
     try:
-        # Проверяем, что сообщение отправлено самим ботом
-        if not event.out:
-            return  # Игнорируем сообщения, отправленные другими пользователями
-
         # Получаем текст сообщения после команды /p
         text = event.pattern_match.group(1)
+
+        # Проверяем, можем ли редактировать сообщение
+        if event.is_private or event.is_channel:
+            
+            return
+
+        # Проверяем, есть ли права на редактирование сообщения
+        if not event.out:
+            
+            return
 
         # Эффект печатания: добавляем по одному символу с задержкой
         typing_cursor = "▮"  # Курсор печатания
