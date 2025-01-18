@@ -8,7 +8,7 @@ from telethon import events, TelegramClient
 CONFIG_FILE = "config.json"
 DEFAULT_TYPING_SPEED = 0.3
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/mishkago/userbot/refs/heads/main/main.py"  # Укажите название вашего скрипта
-SCRIPT_VERSION = "1.3.1"
+SCRIPT_VERSION = "1.4"
 
 # Проверяем наличие файла конфигурации
 if os.path.exists(CONFIG_FILE):
